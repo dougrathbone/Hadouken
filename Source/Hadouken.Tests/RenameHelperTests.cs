@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.IO;
 using Hadouken.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NSubstitute;
@@ -44,8 +42,20 @@ namespace Hadouken.Tests
 																@"C:\test\directory1\directory2\MySolution.test5.sln"
 			                                             	});
 
+            ds.GetFiles(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<SearchOption>()).Returns(new string[]
+			                                             	{
+			                                             		@"C:\test\directory1\test.txt",
+			                                             		@"C:\test\directory1\directory2\test2.txt",
+			                                             		@"C:\test\directory1\directory2\test2.dll",
+			                                             		@"C:\test\directory1\directory2\MySolution.test2.dll",
+			                                             		@"C:\test\directory1\directory2\MySolution.test2.txt",
+			                                             		@"C:\test\directory1\directory2\MySolution.test3.html",
+			                                             		@"C:\test\directory1\directory2\MySolution.test4.csproj",
+			                                             		@"C:\test\directory1\directory2\MySolution.test5.sln"
+			                                             	});
+
 			fs.When(x => x.Move(Arg.Any<string>(), Arg.Any<string>())).Do(x => fileMoveCounter++);
-			ds.When(x => x.Move(Arg.Any<string>(), Arg.Any<string>())).Do(x => folderMoveCounter++);
+			ds.When(x => x.Move(Arg.Any<string>(), Arg.Any<string>())).Do(x => folderMoveCounter++);      
 		}
 
 		[TestMethod]

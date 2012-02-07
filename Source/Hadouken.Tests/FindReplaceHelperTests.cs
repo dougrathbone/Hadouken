@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Hadouken.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NSubstitute;
@@ -15,6 +13,7 @@ namespace Hadouken.Tests
 		private IFileDataSource fs;
 		private IDirectoryDataSource ds;
 		private IOutputController o;
+        private IFileValidator fv;
 		private int fileReadCount = 0;
 		private int fileWriteCount = 0;
 
@@ -24,6 +23,7 @@ namespace Hadouken.Tests
 			fs = Substitute.For<IFileDataSource>();
 			ds = Substitute.For<IDirectoryDataSource>();
 			o = Substitute.For<IOutputController>();
+            fv = Substitute.For<IFileValidator>();
 
 			ds.EnumerateDirectories(Arg.Any<string>()).Returns(new List<string>()
 			                                                   	{
@@ -32,7 +32,6 @@ namespace Hadouken.Tests
 			                                                   		@"C:\test\directory1\MySolution.directory2",
 			                                                   		@"C:\test\directory1\MySolution.directory3"
 			                                                   	});
-
 			ds.GetFiles(Arg.Any<string>(),Arg.Any<string>(),Arg.Any<SearchOption>()).Returns(new string[]
 			                                             	{
 			                                             		@"C:\test\directory1\test.txt",
@@ -44,6 +43,10 @@ namespace Hadouken.Tests
 			                                             		@"C:\test\directory1\directory2\MySolution.test4.csproj",
 			                                             		@"C:\test\directory1\directory2\MySolution.test5.sln"
 			                                             	});
+
+
+            fv.IsValidFile(Arg.Is<string>(x => new[] { ".txt", ".csproj", ".sln", ".html" }.Contains(x))).Returns(true);
+
 		}
 
 		[TestMethod]
@@ -55,7 +58,9 @@ namespace Hadouken.Tests
 				return "test";
 			});
 
-			FindReplaceHelper r = new FindReplaceHelper("C:\test", "NewValue", ds, fs, o);
+
+
+            FindReplaceHelper r = new FindReplaceHelper("C:\test", "NewValue", ds, fs, o, fv);
 			r.DoCoolStuff();
 
 			Assert.IsTrue(fileReadCount == 6, "Incorrect number of files read (called {0})", fileReadCount);
@@ -66,7 +71,7 @@ namespace Hadouken.Tests
 		{
 			fs.When(x => x.WriteAllText(Arg.Any<string>(), Arg.Any<string>())).Do(x => 	fileWriteCount++);
 
-			FindReplaceHelper r = new FindReplaceHelper("C:\test", "NewValue", ds, fs, o);
+            FindReplaceHelper r = new FindReplaceHelper("C:\test", "NewValue", ds, fs, o, fv);
 			r.DoCoolStuff();
 
 			Assert.IsTrue(fileWriteCount == 6, "Incorrect number of files written to (called {0})", fileWriteCount);
